@@ -145,14 +145,6 @@ class ClassicBike(Bike):
 
 
 class ElectricBike(Bike):
-    """An electric bike with a battery.
-
-    TODO:
-        - Add battery_level (float, 0–100) and max_range_km (float, > 0)
-        - Validate inputs in __init__
-        - Implement __str__ and __repr__
-    """
-
     def __init__(
         self,
         bike_id: str,
@@ -161,17 +153,38 @@ class ElectricBike(Bike):
         status: str = "available",
     ) -> None:
         super().__init__(bike_id=bike_id, bike_type="electric", status=status)
-        # TODO: validate battery_level (0-100) and max_range_km (>0)
-        # TODO: store as private attributes with @property access
-        pass
+
+        if not (0 <= battery_level <= 100):
+            raise ValueError("battery_level must be between 0 and 100")
+
+        if max_range_km <= 0:
+            raise ValueError("max_range_km must be positive")
+
+        self._battery_level = battery_level
+        self._max_range_km = max_range_km
+
+    @property
+    def battery_level(self) -> float:
+        return self._battery_level
+
+    @property
+    def max_range_km(self) -> float:
+        return self._max_range_km
 
     def __str__(self) -> str:
-        # TODO: return a user-friendly string
-        return f"ElectricBike({self.id})"
+        return (
+            f"ElectricBike(id={self.id}, "
+            f"battery={self.battery_level}%, "
+            f"range={self.max_range_km}km)"
+        )
 
     def __repr__(self) -> str:
-        # TODO: return a debug-friendly string
-        return f"ElectricBike(bike_id={self.id!r})"
+        return (
+            f"ElectricBike("
+            f"bike_id={self.id!r}, "
+            f"battery_level={self.battery_level!r}, "
+            f"max_range_km={self.max_range_km!r})"
+        )
 
 
 # ---------------------------------------------------------------------------
