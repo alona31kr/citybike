@@ -493,17 +493,8 @@ class Trip:
         )
 
 # ---------------------------------------------------------------------------
-# MaintenanceRecord
-# ---------------------------------------------------------------------------
-
 class MaintenanceRecord:
-    """Represents a maintenance event for a bike.
-
-    TODO:
-        - Store: record_id, bike, date, maintenance_type, cost, description
-        - Validate: cost >= 0, maintenance_type is one of the allowed types
-        - Implement __str__ and __repr__
-    """
+    """Represents a maintenance event for a bike."""
 
     VALID_TYPES = {
         "tire_repair",
@@ -522,13 +513,44 @@ class MaintenanceRecord:
         cost: float,
         description: str = "",
     ) -> None:
-        # TODO: validate and store attributes
-        pass
+        if not isinstance(record_id, str) or not record_id:
+            raise ValueError("record_id must be a non-empty string")
+
+        if not isinstance(bike, Bike):
+            raise TypeError("bike must be a Bike")
+
+        if not isinstance(date, datetime):
+            raise ValueError("date must be a datetime")
+
+        if maintenance_type not in self.VALID_TYPES:
+            raise ValueError(f"Invalid maintenance_type: {maintenance_type}")
+
+        if cost < 0:
+            raise ValueError("cost must be non-negative")
+
+        self.record_id = record_id
+        self.bike = bike
+        self.date = date
+        self.maintenance_type = maintenance_type
+        self.cost = float(cost)
+        self.description = description
 
     def __str__(self) -> str:
-        # TODO
-        return "MaintenanceRecord()"
+        return (
+            f"MaintenanceRecord("
+            f"{self.record_id}, "
+            f"bike={self.bike.id}, "
+            f"type={self.maintenance_type}, "
+            f"cost={self.cost:.2f})"
+        )
 
     def __repr__(self) -> str:
-        # TODO
-        return "MaintenanceRecord()"
+        return (
+            f"MaintenanceRecord("
+            f"record_id={self.record_id!r}, "
+            f"bike={self.bike!r}, "
+            f"date={self.date!r}, "
+            f"maintenance_type={self.maintenance_type!r}, "
+            f"cost={self.cost!r}, "
+            f"description={self.description!r})"
+        )

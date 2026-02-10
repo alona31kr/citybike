@@ -15,7 +15,7 @@ from models import (
     Station, 
     Entity,
     User, CasualUser, MemberUser,
-    Trip, 
+    Trip, MaintenanceRecord
 )
 
 
@@ -689,3 +689,85 @@ class TestTrip:
         assert "TR006" in r
         assert "distance_km" in r
 
+# ---------------------------------------------------------------------------
+# MaintenanceRecord
+# ---------------------------------------------------------------------------
+
+class TestMaintenanceRecord:
+    """Tests for the MaintenanceRecord class."""
+
+    def setup_method(self) -> None:
+        self.bike = ClassicBike(bike_id="BK100")
+        self.date = datetime(2024, 6, 1)
+
+    def test_creation_valid(self) -> None:
+        record = MaintenanceRecord(
+            record_id="MR001",
+            bike=self.bike,
+            date=self.date,
+            maintenance_type="tire_repair",
+            cost=25.5,
+            description="Fixed flat tire",
+        )
+
+        assert record.record_id == "MR001"
+        assert record.bike == self.bike
+        assert record.cost == 25.5
+        assert record.maintenance_type == "tire_repair"
+
+    def test_rejects_negative_cost(self) -> None:
+        with pytest.raises(ValueError):
+            MaintenanceRecord(
+                record_id="MR002",
+                bike=self.bike,
+                date=self.date,
+                maintenance_type="brake_adjustment",
+                cost=-10.0,
+            )
+
+    def test_rejects_invalid_type(self) -> None:
+        with pytest.raises(ValueError):
+            MaintenanceRecord(
+                record_id="MR003",
+                bike=self.bike,
+                date=self.date,
+                maintenance_type="engine_repair",
+                cost=30.0,
+            )
+
+    def test_rejects_invalid_bike(self) -> None:
+        with pytest.raises(TypeError):
+            MaintenanceRecord(
+                record_id="MR004",
+                bike="not_a_bike",  # type: ignore[arg-type]
+                date=self.date,
+                maintenance_type="tire_repair",
+                cost=10.0,
+            )
+
+    def test_str(self) -> None:
+        record = MaintenanceRecord(
+            record_id="MR005",
+            bike=self.bike,
+            date=self.date,
+            maintenance_type="general_inspection",
+            cost=40.0,
+        )
+
+        s = str(record)
+        assert "MR005" in s
+        assert "BK100" in s
+        assert "general_inspection" in s
+
+    def test_repr(self) -> None:
+        record = MaintenanceRecord(
+            record_id="MR006",
+            bike=self.bike,
+            date=self.date,
+            maintenance_type="chain_lubrication",
+            cost=15.0,
+        )
+
+        r = repr(record)
+        assert "MR006" in r
+        assert "chain_lubrication" in r
