@@ -305,12 +305,7 @@ class User(Entity):
 
 
 class CasualUser(User):
-    """A casual (non-member) user.
-
-    TODO:
-        - Add day_pass_count (int >= 0)
-        - Implement __str__ and __repr__
-    """
+    """A casual (non-member) user."""
 
     def __init__(
         self,
@@ -319,28 +314,39 @@ class CasualUser(User):
         email: str,
         day_pass_count: int = 0,
     ) -> None:
-        super().__init__(user_id=user_id, name=name, email=email, user_type="casual")
-        # TODO: validate and store day_pass_count
-        pass
+        super().__init__(
+            user_id=user_id,
+            name=name,
+            email=email,
+            user_type="casual",
+        )
+
+        if not isinstance(day_pass_count, int) or day_pass_count < 0:
+            raise ValueError("day_pass_count must be a non-negative integer")
+
+        self._day_pass_count = day_pass_count
+
+    @property
+    def day_pass_count(self) -> int:
+        return self._day_pass_count
 
     def __str__(self) -> str:
-        # TODO
-        return f"CasualUser({self.id})"
+        return f"CasualUser({self.id}, day_passes={self.day_pass_count})"
 
     def __repr__(self) -> str:
-        # TODO
-        return f"CasualUser(user_id={self.id!r})"
+        return (
+            f"CasualUser("
+            f"user_id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"email={self.email!r}, "
+            f"day_pass_count={self.day_pass_count!r})"
+        )
+
+from datetime import datetime
 
 
 class MemberUser(User):
-    """A registered member user.
-
-    TODO:
-        - Add membership_start (datetime), membership_end (datetime), tier (basic/premium)
-        - Validate that membership_end > membership_start
-        - Validate tier is 'basic' or 'premium'
-        - Implement __str__ and __repr__
-    """
+    """A registered member user."""
 
     def __init__(
         self,
@@ -351,17 +357,57 @@ class MemberUser(User):
         membership_end: datetime = None,
         tier: str = "basic",
     ) -> None:
-        super().__init__(user_id=user_id, name=name, email=email, user_type="member")
-        # TODO: validate and store attributes
-        pass
+        super().__init__(
+            user_id=user_id,
+            name=name,
+            email=email,
+            user_type="member",
+        )
+
+        if not isinstance(tier, str) or tier.lower() not in {"basic", "premium"}:
+            raise ValueError("tier must be 'basic' or 'premium'")
+
+        if membership_start and not isinstance(membership_start, datetime):
+            raise ValueError("membership_start must be a datetime")
+
+        if membership_end and not isinstance(membership_end, datetime):
+            raise ValueError("membership_end must be a datetime")
+
+        if membership_start and membership_end:
+            if membership_end < membership_start:
+                raise ValueError(
+                    "membership_end must be after membership_start"
+                )
+
+        self._tier = tier.lower()
+        self._membership_start = membership_start
+        self._membership_end = membership_end
+
+    @property
+    def tier(self) -> str:
+        return self._tier
+
+    @property
+    def membership_start(self) -> datetime | None:
+        return self._membership_start
+
+    @property
+    def membership_end(self) -> datetime | None:
+        return self._membership_end
 
     def __str__(self) -> str:
-        # TODO
-        return f"MemberUser({self.id})"
+        return f"MemberUser({self.id}, tier={self.tier})"
 
     def __repr__(self) -> str:
-        # TODO
-        return f"MemberUser(user_id={self.id!r})"
+        return (
+            f"MemberUser("
+            f"user_id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"email={self.email!r}, "
+            f"tier={self.tier!r}, "
+            f"membership_start={self.membership_start!r}, "
+            f"membership_end={self.membership_end!r})"
+        )
 
 
 # ---------------------------------------------------------------------------

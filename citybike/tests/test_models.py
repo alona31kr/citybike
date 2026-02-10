@@ -16,7 +16,7 @@ from models import (
     ElectricBike,
     Station,
     Entity,
-    User,
+    User, CasualUser, MemberUser,
 )
 
 
@@ -397,3 +397,164 @@ class TestUser:
         assert "Grace" in r
         assert "grace@example.com" in r
         assert "casual" in r
+
+
+# ---------------------------------------------------------------------------
+# CasualUser
+# ---------------------------------------------------------------------------
+
+class TestCasualUser:
+    """Tests for the CasualUser class."""
+
+    def test_creation_defaults(self) -> None:
+        user = CasualUser(
+            user_id="CU001",
+            name="Alice",
+            email="alice@example.com",
+        )
+
+        assert user.id == "CU001"
+        assert user.user_type == "casual"
+        assert user.day_pass_count == 0
+
+    def test_creation_custom_day_passes(self) -> None:
+        user = CasualUser(
+            user_id="CU002",
+            name="Bob",
+            email="bob@example.com",
+            day_pass_count=3,
+        )
+        assert user.day_pass_count == 3
+
+    def test_rejects_negative_day_pass_count(self) -> None:
+        with pytest.raises(ValueError):
+            CasualUser(
+                user_id="CU003",
+                name="Charlie",
+                email="charlie@example.com",
+                day_pass_count=-1,
+            )
+
+    def test_is_instance_of_user(self) -> None:
+        user = CasualUser(
+            user_id="CU004",
+            name="Dana",
+            email="dana@example.com",
+        )
+        assert isinstance(user, User)
+        assert isinstance(user, Entity)
+
+    def test_str(self) -> None:
+        user = CasualUser(
+            user_id="CU005",
+            name="Eve",
+            email="eve@example.com",
+            day_pass_count=2,
+        )
+        s = str(user)
+        assert "CasualUser" in s
+        assert "CU005" in s
+        assert "2" in s
+
+    def test_repr(self) -> None:
+        user = CasualUser(
+            user_id="CU006",
+            name="Frank",
+            email="frank@example.com",
+            day_pass_count=1,
+        )
+        r = repr(user)
+        assert "CU006" in r
+        assert "Frank" in r
+        assert "day_pass_count=1" in r
+# ---------------------------------------------------------------------------
+# MemberUser
+# ---------------------------------------------------------------------------
+
+class TestMemberUser:
+    """Tests for the MemberUser class."""
+
+    def test_creation_defaults(self) -> None:
+        user = MemberUser(
+            user_id="MU001",
+            name="Alice",
+            email="alice@example.com",
+        )
+
+        assert user.id == "MU001"
+        assert user.user_type == "member"
+        assert user.tier == "basic"
+        assert user.membership_start is None
+        assert user.membership_end is None
+
+    def test_creation_custom_values(self) -> None:
+        start = datetime(2024, 1, 1)
+        end = datetime(2024, 12, 31)
+
+        user = MemberUser(
+            user_id="MU002",
+            name="Bob",
+            email="bob@example.com",
+            membership_start=start,
+            membership_end=end,
+            tier="premium",
+        )
+
+        assert user.tier == "premium"
+        assert user.membership_start == start
+        assert user.membership_end == end
+
+    def test_rejects_invalid_tier(self) -> None:
+        with pytest.raises(ValueError):
+            MemberUser(
+                user_id="MU003",
+                name="Charlie",
+                email="charlie@example.com",
+                tier="gold",
+            )
+
+    def test_rejects_invalid_membership_dates(self) -> None:
+        start = datetime(2024, 6, 1)
+        end = datetime(2024, 5, 1)
+
+        with pytest.raises(ValueError):
+            MemberUser(
+                user_id="MU004",
+                name="Dana",
+                email="dana@example.com",
+                membership_start=start,
+                membership_end=end,
+            )
+
+    def test_is_instance_of_user(self) -> None:
+        user = MemberUser(
+            user_id="MU005",
+            name="Eve",
+            email="eve@example.com",
+        )
+        assert isinstance(user, User)
+        assert isinstance(user, Entity)
+
+    def test_str(self) -> None:
+        user = MemberUser(
+            user_id="MU006",
+            name="Frank",
+            email="frank@example.com",
+            tier="premium",
+        )
+        s = str(user)
+        assert "MemberUser" in s
+        assert "MU006" in s
+        assert "premium" in s
+
+    def test_repr(self) -> None:
+        user = MemberUser(
+            user_id="MU007",
+            name="Grace",
+            email="grace@example.com",
+            tier="basic",
+        )
+        r = repr(user)
+        assert "MU007" in r
+        assert "Grace" in r
+        assert "tier='basic'" in r
