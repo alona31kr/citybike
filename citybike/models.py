@@ -414,16 +414,11 @@ class MemberUser(User):
 # Trip
 # ---------------------------------------------------------------------------
 
-class Trip:
-    """Represents a single bike trip.
+from datetime import datetime
 
-    TODO:
-        - Store all attributes: trip_id, user, bike, start_station,
-          end_station, start_time, end_time, distance_km
-        - Validate: distance_km >= 0, end_time >= start_time
-        - Implement duration_minutes as a @property
-        - Implement __str__ and __repr__
-    """
+
+class Trip:
+    """Represents a single bike trip."""
 
     def __init__(
         self,
@@ -436,23 +431,66 @@ class Trip:
         end_time: datetime,
         distance_km: float,
     ) -> None:
-        # TODO: validate and store attributes
-        pass
+        if not isinstance(trip_id, str) or not trip_id:
+            raise ValueError("trip_id must be a non-empty string")
+
+        if not isinstance(start_time, datetime):
+            raise ValueError("start_time must be a datetime")
+
+        if not isinstance(end_time, datetime):
+            raise ValueError("end_time must be a datetime")
+
+        if end_time < start_time:
+            raise ValueError("end_time must be after start_time")
+
+        if distance_km < 0:
+            raise ValueError("distance_km must be non-negative")
+
+        if not isinstance(user, User):
+            raise TypeError("user must be a User")
+
+        if not isinstance(bike, Bike):
+            raise TypeError("bike must be a Bike")
+
+        if not isinstance(start_station, Station):
+            raise TypeError("start_station must be a Station")
+
+        if not isinstance(end_station, Station):
+            raise TypeError("end_station must be a Station")
+
+        self.trip_id = trip_id
+        self.user = user
+        self.bike = bike
+        self.start_station = start_station
+        self.end_station = end_station
+        self.start_time = start_time
+        self.end_time = end_time
+        self.distance_km = float(distance_km)
 
     @property
     def duration_minutes(self) -> float:
-        """Calculate trip duration in minutes from start and end times."""
-        # TODO: compute from end_time - start_time
-        return 0.0
+        delta = self.end_time - self.start_time
+        return delta.total_seconds() / 60.0
 
     def __str__(self) -> str:
-        # TODO
-        return f"Trip({self.trip_id})"
+        return (
+            f"Trip({self.trip_id}, "
+            f"user={self.user.id}, "
+            f"bike={self.bike.id})"
+        )
 
     def __repr__(self) -> str:
-        # TODO
-        return f"Trip(trip_id={self.trip_id!r})"
-
+        return (
+            f"Trip("
+            f"trip_id={self.trip_id!r}, "
+            f"user={self.user!r}, "
+            f"bike={self.bike!r}, "
+            f"start_station={self.start_station!r}, "
+            f"end_station={self.end_station!r}, "
+            f"start_time={self.start_time!r}, "
+            f"end_time={self.end_time!r}, "
+            f"distance_km={self.distance_km!r})"
+        )
 
 # ---------------------------------------------------------------------------
 # MaintenanceRecord

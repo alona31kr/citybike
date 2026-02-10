@@ -11,12 +11,11 @@ import pytest
 from datetime import datetime
 
 from models import (
-    Bike,
-    ClassicBike,
-    ElectricBike,
-    Station,
+    Bike, ClassicBike, ElectricBike,
+    Station, 
     Entity,
     User, CasualUser, MemberUser,
+    Trip, 
 )
 
 
@@ -558,3 +557,135 @@ class TestMemberUser:
         assert "MU007" in r
         assert "Grace" in r
         assert "tier='basic'" in r
+
+
+# ---------------------------------------------------------------------------
+# Trip
+# ---------------------------------------------------------------------------
+
+class TestTrip:
+    """Tests for the Trip class."""
+
+    def setup_method(self) -> None:
+        self.user = CasualUser(
+            user_id="U001",
+            name="Alice",
+            email="alice@example.com",
+        )
+        self.bike = ClassicBike(bike_id="BK001")
+        self.start_station = Station(
+            station_id="ST001",
+            name="Central",
+            capacity=10,
+            latitude=48.7,
+            longitude=9.1,
+        )
+        self.end_station = Station(
+            station_id="ST002",
+            name="West End",
+            capacity=12,
+            latitude=48.8,
+            longitude=9.2,
+        )
+
+    def test_creation_valid(self) -> None:
+        start = datetime(2024, 6, 1, 10, 0)
+        end = datetime(2024, 6, 1, 10, 30)
+
+        trip = Trip(
+            trip_id="TR001",
+            user=self.user,
+            bike=self.bike,
+            start_station=self.start_station,
+            end_station=self.end_station,
+            start_time=start,
+            end_time=end,
+            distance_km=5.2,
+        )
+
+        assert trip.trip_id == "TR001"
+        assert trip.distance_km == 5.2
+        assert trip.duration_minutes == 30.0
+
+    def test_rejects_negative_distance(self) -> None:
+        start = datetime(2024, 6, 1, 10, 0)
+        end = datetime(2024, 6, 1, 10, 10)
+
+        with pytest.raises(ValueError):
+            Trip(
+                trip_id="TR002",
+                user=self.user,
+                bike=self.bike,
+                start_station=self.start_station,
+                end_station=self.end_station,
+                start_time=start,
+                end_time=end,
+                distance_km=-1.0,
+            )
+
+    def test_rejects_invalid_time_order(self) -> None:
+        start = datetime(2024, 6, 1, 11, 0)
+        end = datetime(2024, 6, 1, 10, 0)
+
+        with pytest.raises(ValueError):
+            Trip(
+                trip_id="TR003",
+                user=self.user,
+                bike=self.bike,
+                start_station=self.start_station,
+                end_station=self.end_station,
+                start_time=start,
+                end_time=end,
+                distance_km=3.0,
+            )
+
+    def test_duration_minutes_fractional(self) -> None:
+        start = datetime(2024, 6, 1, 10, 0)
+        end = datetime(2024, 6, 1, 10, 45, 30)
+
+        trip = Trip(
+            trip_id="TR004",
+            user=self.user,
+            bike=self.bike,
+            start_station=self.start_station,
+            end_station=self.end_station,
+            start_time=start,
+            end_time=end,
+            distance_km=7.0,
+        )
+
+        assert trip.duration_minutes == pytest.approx(45.5)
+
+    def test_str(self) -> None:
+        trip = Trip(
+            trip_id="TR005",
+            user=self.user,
+            bike=self.bike,
+            start_station=self.start_station,
+            end_station=self.end_station,
+            start_time=datetime(2024, 6, 1, 9, 0),
+            end_time=datetime(2024, 6, 1, 9, 15),
+            distance_km=2.0,
+        )
+
+        s = str(trip)
+        assert "TR005" in s
+        assert "U001" in s
+        assert "BK001" in s
+
+    def test_repr(self) -> None:
+        trip = Trip(
+            trip_id="TR006",
+            user=self.user,
+            bike=self.bike,
+            start_station=self.start_station,
+            end_station=self.end_station,
+            start_time=datetime(2024, 6, 1, 9, 0),
+            end_time=datetime(2024, 6, 1, 9, 15),
+            distance_km=2.0,
+        )
+
+        r = repr(trip)
+        assert "TR006" in r
+        assert "distance_km" in r
+
