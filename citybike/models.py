@@ -192,13 +192,7 @@ class ElectricBike(Bike):
 # ---------------------------------------------------------------------------
 
 class Station(Entity):
-    """Represents a bike-sharing station.
-
-    TODO:
-        - Store station_id, name, capacity, latitude, longitude
-        - Validate: capacity > 0, lat in [-90, 90], lon in [-180, 180]
-        - Implement __str__ and __repr__
-    """
+    """Represents a bike-sharing station."""
 
     def __init__(
         self,
@@ -209,18 +203,52 @@ class Station(Entity):
         longitude: float,
     ) -> None:
         super().__init__(id=station_id)
-        # TODO: validate and store attributes
-        pass
+
+        if capacity <= 0:
+            raise ValueError("capacity must be positive")
+
+        if not (-90 <= latitude <= 90):
+            raise ValueError("latitude must be between -90 and 90")
+
+        if not (-180 <= longitude <= 180):
+            raise ValueError("longitude must be between -180 and 180")
+
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("name must be a non-empty string")
+
+        self._name = name.strip()
+        self._capacity = capacity
+        self._latitude = latitude
+        self._longitude = longitude
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def capacity(self) -> int:
+        return self._capacity
+
+    @property
+    def latitude(self) -> float:
+        return self._latitude
+
+    @property
+    def longitude(self) -> float:
+        return self._longitude
 
     def __str__(self) -> str:
-        # TODO
-        return f"Station({self.id})"
+        return f"Station({self.id}, {self.name}, cap={self.capacity})"
 
     def __repr__(self) -> str:
-        # TODO
-        return f"Station(station_id={self.id!r})"
-
-
+        return (
+            f"Station("
+            f"station_id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"capacity={self.capacity!r}, "
+            f"latitude={self.latitude!r}, "
+            f"longitude={self.longitude!r})"
+        )
 # ---------------------------------------------------------------------------
 # User hierarchy
 # ---------------------------------------------------------------------------
