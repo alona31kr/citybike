@@ -14,7 +14,9 @@ from models import (
     Bike,
     ClassicBike,
     ElectricBike,
+    Station,
     Entity,
+    User,
 )
 
 
@@ -140,3 +142,258 @@ class TestClassicBike:
         assert "BK015" in r
         assert "gear_count=7" in r
         assert "available" in r
+
+
+# ---------------------------------------------------------------------------
+# ElectricBike
+# ---------------------------------------------------------------------------
+
+class TestElectricBike:
+    """Tests for the ElectricBike subclass."""
+
+    def test_creation_defaults(self) -> None:
+        bike = ElectricBike(bike_id="EB001")
+        assert bike.id == "EB001"
+        assert bike.bike_type == "electric"
+        assert bike.battery_level == 100.0
+        assert bike.max_range_km == 50.0
+        assert bike.status == "available"
+
+    def test_creation_custom_values(self) -> None:
+        bike = ElectricBike(
+            bike_id="EB002",
+            battery_level=80.0,
+            max_range_km=65.0,
+            status="in_use",
+        )
+        assert bike.battery_level == 80.0
+        assert bike.max_range_km == 65.0
+        assert bike.status == "in_use"
+
+    def test_rejects_battery_above_100(self) -> None:
+        with pytest.raises(ValueError):
+            ElectricBike(bike_id="EB003", battery_level=150.0)
+
+    def test_rejects_battery_below_0(self) -> None:
+        with pytest.raises(ValueError):
+            ElectricBike(bike_id="EB004", battery_level=-5.0)
+
+    def test_rejects_non_positive_range(self) -> None:
+        with pytest.raises(ValueError):
+            ElectricBike(bike_id="EB005", max_range_km=0)
+
+    def test_is_instance_of_bike_and_entity(self) -> None:
+        bike = ElectricBike(bike_id="EB006")
+        assert isinstance(bike, Bike)
+        assert isinstance(bike, Entity)
+
+    def test_str(self) -> None:
+        bike = ElectricBike(bike_id="EB007", battery_level=90.0)
+        s = str(bike)
+        assert "ElectricBike" in s
+        assert "EB007" in s
+        assert "90" in s
+
+    def test_repr(self) -> None:
+        bike = ElectricBike(
+            bike_id="EB008",
+            battery_level=75.0,
+            max_range_km=55.0,
+        )
+        r = repr(bike)
+        assert "ElectricBike" in r
+        assert "EB008" in r
+        assert "battery_level=75.0" in r
+        assert "max_range_km=55.0" in r
+
+
+# ---------------------------------------------------------------------------
+# Station
+# ---------------------------------------------------------------------------
+
+class TestStation:
+    """Tests for the Station model."""
+
+    def test_creation_valid(self) -> None:
+        station = Station(
+            station_id="ST001",
+            name="Central Station",
+            capacity=20,
+            latitude=48.78,
+            longitude=9.18,
+        )
+
+        assert station.id == "ST001"
+        assert station.name == "Central Station"
+        assert station.capacity == 20
+        assert station.latitude == 48.78
+        assert station.longitude == 9.18
+
+    def test_rejects_zero_capacity(self) -> None:
+        with pytest.raises(ValueError):
+            Station(
+                station_id="ST002",
+                name="Zero Cap",
+                capacity=0,
+                latitude=48.7,
+                longitude=9.1,
+            )
+
+    def test_rejects_negative_capacity(self) -> None:
+        with pytest.raises(ValueError):
+            Station(
+                station_id="ST003",
+                name="Negative Cap",
+                capacity=-5,
+                latitude=48.7,
+                longitude=9.1,
+            )
+
+    def test_rejects_invalid_latitude(self) -> None:
+        with pytest.raises(ValueError):
+            Station(
+                station_id="ST004",
+                name="Bad Lat",
+                capacity=10,
+                latitude=120.0,
+                longitude=9.1,
+            )
+
+    def test_rejects_invalid_longitude(self) -> None:
+        with pytest.raises(ValueError):
+            Station(
+                station_id="ST005",
+                name="Bad Lon",
+                capacity=10,
+                latitude=48.7,
+                longitude=250.0,
+            )
+
+    def test_rejects_empty_name(self) -> None:
+        with pytest.raises(ValueError):
+            Station(
+                station_id="ST006",
+                name="   ",
+                capacity=10,
+                latitude=48.7,
+                longitude=9.1,
+            )
+
+    def test_is_instance_of_entity(self) -> None:
+        station = Station(
+            station_id="ST007",
+            name="Entity Test",
+            capacity=15,
+            latitude=48.7,
+            longitude=9.1,
+        )
+        assert isinstance(station, Entity)
+
+    def test_str(self) -> None:
+        station = Station(
+            station_id="ST008",
+            name="Market Square",
+            capacity=25,
+            latitude=48.75,
+            longitude=9.15,
+        )
+        s = str(station)
+        assert "Station" in s
+        assert "ST008" in s
+        assert "Market Square" in s
+        assert "25" in s
+
+    def test_repr(self) -> None:
+        station = Station(
+            station_id="ST009",
+            name="Old Town",
+            capacity=30,
+            latitude=48.76,
+            longitude=9.16,
+        )
+        r = repr(station)
+        assert "Station" in r
+        assert "ST009" in r
+        assert "Old Town" in r
+        assert "capacity=30" in r
+
+# ---------------------------------------------------------------------------
+# User
+# ---------------------------------------------------------------------------
+
+class TestUser:
+    """Tests for the User base class."""
+
+    def test_creation_valid(self) -> None:
+        user = User(
+            user_id="U001",
+            name="Alice",
+            email="alice@example.com",
+            user_type="casual",
+        )
+
+        assert user.id == "U001"
+        assert user.name == "Alice"
+        assert user.email == "alice@example.com"
+        assert user.user_type == "casual"
+
+    def test_rejects_empty_name(self) -> None:
+        with pytest.raises(ValueError):
+            User(
+                user_id="U002",
+                name="   ",
+                email="bob@example.com",
+                user_type="casual",
+            )
+
+    def test_rejects_invalid_email(self) -> None:
+        with pytest.raises(ValueError):
+            User(
+                user_id="U003",
+                name="Charlie",
+                email="charlieexample.com",
+                user_type="member",
+            )
+
+    def test_rejects_empty_user_type(self) -> None:
+        with pytest.raises(ValueError):
+            User(
+                user_id="U004",
+                name="Dana",
+                email="dana@example.com",
+                user_type="",
+            )
+
+    def test_is_instance_of_entity(self) -> None:
+        user = User(
+            user_id="U005",
+            name="Eve",
+            email="eve@example.com",
+            user_type="casual",
+        )
+        assert isinstance(user, Entity)
+
+    def test_str(self) -> None:
+        user = User(
+            user_id="U006",
+            name="Frank",
+            email="frank@example.com",
+            user_type="member",
+        )
+        s = str(user)
+        assert "User" in s
+        assert "U006" in s
+        assert "member" in s
+
+    def test_repr(self) -> None:
+        user = User(
+            user_id="U007",
+            name="Grace",
+            email="grace@example.com",
+            user_type="casual",
+        )
+        r = repr(user)
+        assert "U007" in r
+        assert "Grace" in r
+        assert "grace@example.com" in r
+        assert "casual" in r

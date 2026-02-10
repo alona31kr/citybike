@@ -249,18 +249,13 @@ class Station(Entity):
             f"latitude={self.latitude!r}, "
             f"longitude={self.longitude!r})"
         )
+
 # ---------------------------------------------------------------------------
 # User hierarchy
 # ---------------------------------------------------------------------------
 
 class User(Entity):
-    """Base class for a system user.
-
-    TODO:
-        - Store user_id, name, email, user_type
-        - Validate email format (basic check: contains '@')
-        - Implement __str__ and __repr__
-    """
+    """Base class for a system user."""
 
     def __init__(
         self,
@@ -270,16 +265,43 @@ class User(Entity):
         user_type: str,
     ) -> None:
         super().__init__(id=user_id)
-        # TODO: validate and store attributes
-        pass
+
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("name must be a non-empty string")
+
+        if not isinstance(email, str) or "@" not in email:
+            raise ValueError("invalid email format")
+
+        if not isinstance(user_type, str) or not user_type.strip():
+            raise ValueError("user_type must be a non-empty string")
+
+        self._name = name.strip()
+        self._email = email.strip()
+        self._user_type = user_type.strip()
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def email(self) -> str:
+        return self._email
+
+    @property
+    def user_type(self) -> str:
+        return self._user_type
 
     def __str__(self) -> str:
-        # TODO
-        return f"User({self.id})"
+        return f"User({self.id}, {self.user_type})"
 
     def __repr__(self) -> str:
-        # TODO
-        return f"User(user_id={self.id!r})"
+        return (
+            f"User("
+            f"user_id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"email={self.email!r}, "
+            f"user_type={self.user_type!r})"
+        )
 
 
 class CasualUser(User):
