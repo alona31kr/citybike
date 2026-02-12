@@ -9,6 +9,7 @@ Students should:
     - Optionally add create_trip() and create_maintenance_record()
 """
 
+from datetime import datetime
 from models import (
     Bike,
     ClassicBike,
@@ -56,16 +57,40 @@ def create_bike(data: dict) -> Bike:
 def create_user(data: dict) -> User:
     """Create a User (CasualUser or MemberUser) from a data dictionary.
 
-    TODO:
-        - Inspect data["user_type"] to decide which subclass to create
-        - Pass the relevant fields to each constructor
-        - Return the created object
-
     Args:
         data: A dict with at least 'user_id', 'name', 'email', 'user_type'.
 
     Returns:
         A CasualUser or MemberUser instance.
+
+    Raises:
+        ValueError: If user_type is unknown.
     """
-    # TODO: implement factory logic (similar to create_bike above)
-    raise NotImplementedError("create_user")
+    user_type = data.get("user_type", "").lower()
+
+    if user_type == "casual":
+        return CasualUser(
+            user_id=data["user_id"],
+            name=data["name"],
+            email=data["email"],
+            day_pass_count=int(data.get("day_pass_count", 0)),
+        )
+    elif user_type == "member":
+        # Convert strings to datetime if needed
+        start = data.get("membership_start")
+        end = data.get("membership_end")
+        if isinstance(start, str):
+            start = datetime.fromisoformat(start)
+        if isinstance(end, str):
+            end = datetime.fromisoformat(end)
+
+        return MemberUser(
+            user_id=data["user_id"],
+            name=data["name"],
+            email=data["email"],
+            membership_start=start,
+            membership_end=end,
+            tier=data.get("tier", "basic"),
+        )
+    else:
+        raise ValueError(f"Unknown user_type: {user_type!r}")
