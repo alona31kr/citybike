@@ -150,45 +150,40 @@ class BikeShareSystem:
         )
         return counts[["station_name", "trip_count"]]
     
-
-
     def peak_usage_hours(self) -> pd.Series:
-        """Q3: Trip count by hour of day.
-
-        TODO: extract hour from start_time and count trips per hour.
-        """
-        raise NotImplementedError("peak_usage_hours")
+        """Q3: Trip count by hour of day."""
+        return self.trips["start_time"].dt.hour.value_counts().sort_index()
 
     def busiest_day_of_week(self) -> pd.Series:
-        """Q4: Trip count by day of week.
-
-        TODO: extract day-of-week from start_time, count.
-        """
-        raise NotImplementedError("busiest_day_of_week")
+        """Q4: Trip count by day of week."""
+        return self.trips["start_time"].dt.day_name().value_counts()
 
     def avg_distance_by_user_type(self) -> pd.Series:
         """Q5: Average trip distance grouped by user type."""
-        raise NotImplementedError("avg_distance_by_user_type")
+        return self.trips.groupby("user_type")["distance_km"].mean().round(2)
 
     def monthly_trip_trend(self) -> pd.Series:
-        """Q7: Monthly trip counts over time.
-
-        TODO: extract year-month from start_time, group, count.
-        """
-        raise NotImplementedError("monthly_trip_trend")
+        """Q7: Monthly trip counts over time."""
+        return (
+            self.trips
+            .groupby(self.trips["start_time"].dt.to_period("M"))
+            .size()
+            .sort_index()
+        )
 
     def top_active_users(self, n: int = 15) -> pd.DataFrame:
         """Q8: Top *n* most active users by trip count."""
         df = (self.trips.groupby("user_id", as_index=False).agg(total_trips=("trip_id", "count")))
         return df.sort_values("total_trips", ascending=False).head(n)
-
-    
+   
     def maintenance_cost_by_bike_type(self) -> pd.Series:
-        """Q9: Total maintenance cost per bike type.
-
-        TODO: group maintenance by bike_type, sum cost.
-        """
-        raise NotImplementedError("maintenance_cost_by_bike_type")
+        """Q9: Total maintenance cost per bike type."""
+        return (
+            self.maintenance
+            .groupby("bike_type")["cost"]
+            .sum()
+            .round(2)
+        )
 
     def top_routes(self, n: int = 10) -> pd.DataFrame:
         """Q10: Most common start→end station pairs."""
@@ -203,18 +198,22 @@ class BikeShareSystem:
     # ------------------------------------------------------------------
     # Add more analytics methods here (Q6, Q11–Q14)
     # ------------------------------------------------------------------
+    def bike_utilization_rate(self) -> pd.DataFrame:
+        """Q6: Compute total usage duration per bike with bike type, sorted descending."""
+        return (
+            self.trips
+            .groupby(['bike_id', 'bike_type'], as_index=False)['duration_minutes']
+            .sum()
+            .rename(columns={'duration_minutes': 'total_usage_min'})
+            .sort_values('total_usage_min', ascending=False)
+        )
 
     # ------------------------------------------------------------------
     # Reporting
     # ------------------------------------------------------------------
 
     def generate_summary_report(self) -> None:
-        """Write a summary text report to output/summary_report.txt.
-
-        TODO:
-            - Uncomment and complete each section below
-            - Add results from remaining analytics methods
-        """
+        """A summary text report to output/summary_report.txt."""
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         report_path = OUTPUT_DIR / "summary_report.txt"
 
@@ -236,32 +235,47 @@ class BikeShareSystem:
         lines.append(top_stations.to_string(index=False))
 
 
+        # --- Q3: Peak usage hours ---
+        hours = self.peak_usage_hours()
+        lines.append("\n--- Peak Usage Hours ---")
+        lines.append(hours.to_string())
+
+        # --- Q4: Busiest day of the week ---
+        busiest_day = self.busiest_day_of_week()
+        lines.append("\n--- Busiest Day of the Week ---")
+        lines.append(busiest_day.to_string())
+
+        # --- Q5: Average distance by user type ---
+        avg_distance = self.avg_distance_by_user_type()
+        lines.append("\n--- Average Distance by User Type ---")
+        lines.append(avg_distance.to_string())
+
+        # --- Q6: Monthly trip trend ---
+        monthly_trend = self.monthly_trip_trend()
+        lines.append("\n--- Monthly Trip Counts ---")
+        lines.append(monthly_trend.to_string())
+
+        # --- Q7: Top 15 Most Utilized Bikes ---
+        top_bikes = self.bike_utilization_rate()
+        lines.append("\n--- Top 10 Most Utilized Bikes ---")
+        lines.append(top_bikes.head(10).to_string(index=False))
+
         # --- Q8: Top active users ---
         top_users = self.top_active_users()
         lines.append("\n--- Top 10 Active Users ---")
         lines.append(top_users.to_string(index=False))
 
+        # --- Q9: Maintenance cost by bike type ---
+        maint_cost = self.maintenance_cost_by_bike_type()
+        lines.append("\n--- Maintenance Cost by Bike Type ---")
+        lines.append(maint_cost.to_string())
 
         # --- Q10: Most common start→end station pairs ---
         top_routes = self.top_routes()
         lines.append("\n--- Top 10 Routes ---")
         lines.append(top_routes.to_string(index=False))
 
-
-        # --- Q3: Peak usage hours ---
-        # TODO: uncomment once peak_usage_hours() is implemented
-        # hours = self.peak_usage_hours()
-        # lines.append("\n--- Peak Usage Hours ---")
-        # lines.append(hours.to_string())
-
-        # --- Q9: Maintenance cost by bike type ---
-        # TODO: uncomment once maintenance_cost_by_bike_type() is implemented
-        # maint_cost = self.maintenance_cost_by_bike_type()
-        # lines.append("\n--- Maintenance Cost by Bike Type ---")
-        # lines.append(maint_cost.to_string())
-
-        # TODO: add more sections for Q4–Q8, Q10–Q14 …
-
         report_text = "\n".join(lines) + "\n"
         report_path.write_text(report_text)
+        
         print(f"Report saved to {report_path}")
