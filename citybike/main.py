@@ -42,8 +42,12 @@ def main() -> None:
     print(f"  Total distance   : {summary['total_distance_km']} km")
     print(f"  Avg duration     : {summary['avg_duration_min']} min")
 
-    # TODO: call additional analytics methods here
-    # e.g. system.top_start_stations(), system.peak_usage_hours(), ...
+    # call additional analytics methods
+    top_stations = system.top_start_stations()
+    print(f"  Top 10 Start Stations:\n {top_stations.to_string(index=False, header = False)}")
+
+    busiest_day = system.busiest_day_of_week()
+    print(f"  Busiest Day of the Week: {busiest_day.to_string(header = False)} trips")
 
     # Step 4b — Pricing (Strategy Pattern + NumPy vectorized fares)
     # The pricing strategies define the business rules (per-minute rate, etc.),
