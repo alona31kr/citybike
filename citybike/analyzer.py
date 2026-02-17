@@ -155,8 +155,12 @@ class BikeShareSystem:
         return self.trips["start_time"].dt.hour.value_counts().sort_index()
 
     def busiest_day_of_week(self) -> pd.Series:
-        """Q4: Trip count by day of week."""
-        return self.trips["start_time"].dt.day_name().value_counts()
+        """Q4: Return the busiest day of the week and its number of trips as a pd.Series."""
+        counts = self.trips["start_time"].dt.day_name().value_counts()
+        busiest_day = counts.idxmax()
+        trip_count = counts.max()
+        return pd.Series({busiest_day: trip_count})
+
 
     def avg_distance_by_user_type(self) -> pd.Series:
         """Q5: Average trip distance grouped by user type."""
