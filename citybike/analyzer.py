@@ -139,14 +139,18 @@ class BikeShareSystem:
         }
 
     def top_start_stations(self, n: int = 10) -> pd.DataFrame:
-        """Q2: Top *n* most popular start stations.
+        """Q2: Top *n* most popular start stations"""
 
-        TODO: use value_counts() or groupby on start_station_id,
-              merge with station names.
-        """
-        # Example start:
-        # counts = self.trips["start_station_id"].value_counts().head(n)
-        raise NotImplementedError("top_start_stations")
+        counts = self.trips["start_station_id"].value_counts().head(n).reset_index()
+        counts.columns = ["station_id", "trip_count"]
+        counts = counts.merge(
+            self.stations[["station_id", "station_name"]], 
+            on="station_id", 
+            how="left"
+        )
+        return counts[["station_name", "trip_count"]]
+    
+
 
     def peak_usage_hours(self) -> pd.Series:
         """Q3: Trip count by hour of day.
@@ -174,12 +178,11 @@ class BikeShareSystem:
         raise NotImplementedError("monthly_trip_trend")
 
     def top_active_users(self, n: int = 15) -> pd.DataFrame:
-        """Q8: Top *n* most active users by trip count.
+        """Q8: Top *n* most active users by trip count."""
+        df = (self.trips.groupby("user_id", as_index=False).agg(total_trips=("trip_id", "count")))
+        return df.sort_values("total_trips", ascending=False).head(n)
 
-        TODO: group by user_id, count trips, sort descending.
-        """
-        raise NotImplementedError("top_active_users")
-
+    
     def maintenance_cost_by_bike_type(self) -> pd.Series:
         """Q9: Total maintenance cost per bike type.
 
@@ -188,11 +191,14 @@ class BikeShareSystem:
         raise NotImplementedError("maintenance_cost_by_bike_type")
 
     def top_routes(self, n: int = 10) -> pd.DataFrame:
-        """Q10: Most common start→end station pairs.
-
-        TODO: group by (start_station_id, end_station_id), count, sort.
-        """
-        raise NotImplementedError("top_routes")
+        """Q10: Most common start→end station pairs."""
+        df = (
+            self.trips
+            .groupby(["start_station_id", "end_station_id"], as_index=False)
+            .agg(trip_count=("trip_id", "count"))
+            .sort_values("trip_count", ascending=False)
+        )
+        return df.head(n)
 
     # ------------------------------------------------------------------
     # Add more analytics methods here (Q6, Q11–Q14)
@@ -225,10 +231,22 @@ class BikeShareSystem:
         lines.append(f"  Avg duration      : {summary['avg_duration_min']} min")
 
         # --- Q2: Top start stations ---
-        # TODO: uncomment once top_start_stations() is implemented
-        # top_stations = self.top_start_stations()
-        # lines.append("\n--- Top 10 Start Stations ---")
-        # lines.append(top_stations.to_string(index=False))
+        top_stations = self.top_start_stations()
+        lines.append("\n--- Top 10 Start Stations ---")
+        lines.append(top_stations.to_string(index=False))
+
+
+        # --- Q8: Top active users ---
+        top_users = self.top_active_users()
+        lines.append("\n--- Top 10 Active Users ---")
+        lines.append(top_users.to_string(index=False))
+
+
+        # --- Q10: Most common start→end station pairs ---
+        top_routes = self.top_routes()
+        lines.append("\n--- Top 10 Routes ---")
+        lines.append(top_routes.to_string(index=False))
+
 
         # --- Q3: Peak usage hours ---
         # TODO: uncomment once peak_usage_hours() is implemented
@@ -247,4 +265,3 @@ class BikeShareSystem:
         report_text = "\n".join(lines) + "\n"
         report_path.write_text(report_text)
         print(f"Report saved to {report_path}")
-
