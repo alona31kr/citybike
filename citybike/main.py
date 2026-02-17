@@ -15,7 +15,7 @@ Usage:
 """
 
 from analyzer import BikeShareSystem
-from visualization import plot_trips_per_station
+from visualization import plot_trips_per_station, plot_monthly_trend, plot_duration_histogram, plot_duration_by_user_type
 
 
 def main() -> None:
@@ -74,13 +74,13 @@ def main() -> None:
     # Step 5 — Visualizations
     print("\n>>> Generating visualizations …")
     plot_trips_per_station(system.trips, system.stations)
-    # TODO: call remaining plot functions
-    # plot_monthly_trend(system.trips)
-    # plot_duration_histogram(system.trips)
-    # plot_duration_by_user_type(system.trips)
+
+    plot_monthly_trend(system.trips)
+    plot_duration_histogram(system.trips)
+    plot_duration_by_user_type(system.trips)
 
     # Step 6 — Report
-    # TODO: system.generate_summary_report()
+    system.generate_summary_report()
 
     print("\n>>> Done! Check output/ for results.")
 

@@ -63,18 +63,26 @@ def plot_trips_per_station(trips: pd.DataFrame, stations: pd.DataFrame) -> None:
 
 # ---------------------------------------------------------------------------
 # 2. Line chart — monthly trend
-# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------   
 
 def plot_monthly_trend(trips: pd.DataFrame) -> None:
-    """Line chart of monthly trip counts.
+    """Line chart of monthly trip counts"""
+    df = trips.copy()
+    df['month'] = df['start_time'].dt.to_period('M')
+    
+    trend = df.groupby('month').size()
+    x_dates = trend.index.astype(str)
 
-    TODO:
-        - Extract year-month from start_time
-        - Group and count
-        - Plot a line chart
-        - Save as 'monthly_trend.png'
-    """
-    raise NotImplementedError("plot_monthly_trend")
+    fig, ax = plt.subplots()
+    ax.plot(x_dates, trend.values, marker='o', linestyle='-', color='green', linewidth=3)
+    
+    ax.set_title("CityBike Monthly Trip Trend")
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Trips Count")
+    plt.xticks(rotation=45)
+    
+    _save_figure(fig, "monthly_trend.png")
+
 
 
 # ---------------------------------------------------------------------------
@@ -82,15 +90,18 @@ def plot_monthly_trend(trips: pd.DataFrame) -> None:
 # ---------------------------------------------------------------------------
 
 def plot_duration_histogram(trips: pd.DataFrame) -> None:
-    """Histogram of trip durations.
+    """Histogram of trip durations."""
+    df = trips[trips['duration_minutes'] < 60]['duration_minutes']
 
-    TODO:
-        - Use trips["duration_minutes"]
-        - Choose an appropriate number of bins
-        - Add title, axis labels
-        - Save as 'duration_histogram.png'
-    """
-    raise NotImplementedError("plot_duration_histogram")
+    fig, ax = plt.subplots()
+    ax.hist(df, bins=30, color="orange", edgecolor='white')
+    
+    ax.set_title("CityBike Trip Duration Distribution (< 60 min)")
+    ax.set_xlabel("Trip Duration (minutes)")
+    ax.set_ylabel("Trips Count")
+    
+    _save_figure(fig, "duration_histogram.png")
+
 
 
 # ---------------------------------------------------------------------------
@@ -98,12 +109,20 @@ def plot_duration_histogram(trips: pd.DataFrame) -> None:
 # ---------------------------------------------------------------------------
 
 def plot_duration_by_user_type(trips: pd.DataFrame) -> None:
-    """Box plot comparing trip durations across user types.
+    """Box plot comparing trip durations across user types."""
+    df = trips[trips['duration_minutes'] < 60]
+    
+    casual_data = df[df['user_type'] == 'casual']['duration_minutes']
+    member_data = df[df['user_type'] == 'member']['duration_minutes']
+    
+    plot_data = [casual_data, member_data]
 
-    TODO:
-        - Group data by user_type
-        - Create side-by-side box plots
-        - Add title, axis labels
-        - Save as 'duration_by_user_type.png'
-    """
-    raise NotImplementedError("plot_duration_by_user_type")
+    fig, ax = plt.subplots()
+    ax.boxplot(plot_data, labels=['Casual', 'Member'], patch_artist=True,
+               boxprops=dict(facecolor="#EBE70F", color='white'),
+               medianprops=dict(color='white'))
+    
+    ax.set_title("CityBike Trip Duration Casual vs Member")
+    ax.set_ylabel("Trip Duration (minutes)")
+    
+    _save_figure(fig, "duration_by_user_type.png")
