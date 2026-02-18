@@ -8,7 +8,8 @@ Covers:
 
 import pytest
 
-from pricing import PricingStrategy, CasualPricing
+from pricing import PricingStrategy, CasualPricing, MemberPricing, PeakHourPricing
+
 
 
 # ---------------------------------------------------------------------------
@@ -54,6 +55,73 @@ class TestCasualPricing:
         near = self.pricing.calculate_cost(10, 1)
         far = self.pricing.calculate_cost(10, 10)
         assert far > near
+
+    def test_is_pricing_strategy(self) -> None:
+        assert isinstance(self.pricing, PricingStrategy)
+
+
+# ---------------------------------------------------------------------------
+# MemberPricing
+# ---------------------------------------------------------------------------
+
+class TestMemberPricing:
+
+    def setup_method(self) -> None:
+        self.pricing = MemberPricing()
+
+    def test_zero_trip(self) -> None:
+        cost = self.pricing.calculate_cost(0, 0)
+        assert cost == pytest.approx(0.00)  # no unlock fee
+
+    def test_known_trip(self) -> None:
+        # 20 min, 5 km → 20*0.08 + 5*0.05 = 1.60 + 0.25 = 1.85
+        cost = self.pricing.calculate_cost(20, 5)
+        assert cost == pytest.approx(1.85)
+
+    def test_long_trip(self) -> None:
+        # 60 min, 12 km → 4.80 + 0.60 = 5.40
+        cost = self.pricing.calculate_cost(60, 12)
+        assert cost == pytest.approx(5.40)
+
+    def test_cost_increases_with_duration(self) -> None:
+        short = self.pricing.calculate_cost(10, 5)
+        long = self.pricing.calculate_cost(30, 5)
+        assert long > short
+
+    def test_cost_increases_with_distance(self) -> None:
+        near = self.pricing.calculate_cost(10, 1)
+        far = self.pricing.calculate_cost(10, 10)
+        assert far > near
+
+    def test_is_pricing_strategy(self) -> None:
+        assert isinstance(self.pricing, PricingStrategy)
+
+
+# ---------------------------------------------------------------------------
+# PeakHourPricing
+# ---------------------------------------------------------------------------
+
+class TestPeakHourPricing:
+
+    def setup_method(self) -> None:
+        self.pricing = PeakHourPricing()
+        self.casual = CasualPricing()
+
+    def test_applies_multiplier(self) -> None:
+        base = self.casual.calculate_cost(20, 5)
+        peak = self.pricing.calculate_cost(20, 5)
+
+        assert peak == pytest.approx(base * 1.5)
+
+    def test_zero_trip(self) -> None:
+        # Casual zero trip = 1.00 → peak = 1.50
+        cost = self.pricing.calculate_cost(0, 0)
+        assert cost == pytest.approx(1.50)
+
+    def test_cost_increases_with_duration(self) -> None:
+        short = self.pricing.calculate_cost(10, 5)
+        long = self.pricing.calculate_cost(30, 5)
+        assert long > short
 
     def test_is_pricing_strategy(self) -> None:
         assert isinstance(self.pricing, PricingStrategy)

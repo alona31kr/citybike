@@ -40,13 +40,7 @@ class PricingStrategy(ABC):
 # ---------------------------------------------------------------------------
 
 class CasualPricing(PricingStrategy):
-    """Pricing for casual (non-member) users.
-
-    Rate:
-        - €1.00 unlock fee
-        - €0.15 per minute
-        - €0.10 per km
-    """
+    """Pricing for casual (non-member) users."""
 
     UNLOCK_FEE = 1.00
     PER_MINUTE = 0.15
@@ -63,14 +57,7 @@ class CasualPricing(PricingStrategy):
 
 
 class MemberPricing(PricingStrategy):
-    """Pricing for member users — discounted rates.
-
-    TODO:
-        - No unlock fee
-        - €0.08 per minute
-        - €0.05 per km
-        - Implement calculate_cost
-    """
+    """Pricing for member users — discounted rates."""
 
     PER_MINUTE = 0.08
     PER_KM = 0.05
@@ -78,22 +65,22 @@ class MemberPricing(PricingStrategy):
     def calculate_cost(
         self, duration_minutes: float, distance_km: float
     ) -> float:
-        # TODO: implement the member pricing formula
-        raise NotImplementedError("MemberPricing.calculate_cost")
+        return (
+            self.PER_MINUTE * duration_minutes
+            + self.PER_KM * distance_km
+        )
 
 
 class PeakHourPricing(PricingStrategy):
-    """Pricing during peak hours (surcharge on top of casual rates).
-
-    TODO:
-        - Apply a 1.5x multiplier to the CasualPricing cost
-        - Implement calculate_cost
-    """
+    """Pricing during peak hours (surcharge on top of casual rates)."""
 
     MULTIPLIER = 1.5
 
     def calculate_cost(
         self, duration_minutes: float, distance_km: float
     ) -> float:
-        # TODO: implement peak-hour pricing
-        raise NotImplementedError("PeakHourPricing.calculate_cost")
+        base_cost = CasualPricing().calculate_cost(
+            duration_minutes, distance_km
+        )
+        return base_cost * self.MULTIPLIER
+
