@@ -8,13 +8,6 @@ This module defines the class hierarchy:
     Trip
     MaintenanceRecord
     BikeShareSystem
-
-TODO for students:
-    - Complete the Station, User, CasualUser, MemberUser classes
-    - Complete the Trip and MaintenanceRecord classes
-    - Implement the BikeShareSystem class
-    - Add input validation to all constructors
-    - Add @property decorators where appropriate
 """
 
 from abc import ABC, abstractmethod
@@ -342,9 +335,6 @@ class CasualUser(User):
             f"day_pass_count={self.day_pass_count!r})"
         )
 
-from datetime import datetime
-
-
 class MemberUser(User):
     """A registered member user."""
 
@@ -413,9 +403,6 @@ class MemberUser(User):
 # ---------------------------------------------------------------------------
 # Trip
 # ---------------------------------------------------------------------------
-
-from datetime import datetime
-
 
 class Trip:
     """Represents a single bike trip."""

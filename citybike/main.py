@@ -1,5 +1,4 @@
-"""
-CityBike — Bike-Sharing Analytics Platform
+"""CityBike — Bike-Sharing Analytics Platform
 ===========================================
 
 Entry point that orchestrates the full pipeline:
@@ -9,9 +8,6 @@ Entry point that orchestrates the full pipeline:
     4. Run numerical computations
     5. Generate visualizations
     6. Export summary report
-
-Usage:
-    python main.py
 """
 
 from analyzer import BikeShareSystem
@@ -48,11 +44,7 @@ def main() -> None:
 
     busiest_day = system.busiest_day_of_week()
     print(f"  Busiest Day of the Week: {busiest_day.to_string(header = False)} trips")
-
-    # Step 4b — Pricing (Strategy Pattern + NumPy vectorized fares)
-    # The pricing strategies define the business rules (per-minute rate, etc.),
-    # and calculate_fares applies those rates to all trips at once via NumPy.
-    
+   
     # Step 4b — Pricing (Strategy Pattern + NumPy vectorized fares)
     print("\n>>> Computing fares …")
     system.compute_fares()
@@ -65,11 +57,9 @@ def main() -> None:
     print("\nAverage fare per user type:")
     print(avg_fares.to_string(index=False, header=False))
 
-
     # Step 5 — Visualizations
     print("\n>>> Generating visualizations …")
     plot_trips_per_station(system.trips, system.stations)
-
     plot_monthly_trend(system.trips)
     plot_duration_histogram(system.trips)
     plot_duration_by_user_type(system.trips)
