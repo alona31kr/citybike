@@ -40,13 +40,7 @@ class PricingStrategy(ABC):
 # ---------------------------------------------------------------------------
 
 class CasualPricing(PricingStrategy):
-    """Pricing for casual (non-member) users.
-
-    Rate:
-        - €1.00 unlock fee
-        - €0.15 per minute
-        - €0.10 per km
-    """
+    """Pricing for casual (non-member) users."""
 
     UNLOCK_FEE = 1.00
     PER_MINUTE = 0.15
