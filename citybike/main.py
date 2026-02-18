@@ -52,28 +52,19 @@ def main() -> None:
     # Step 4b — Pricing (Strategy Pattern + NumPy vectorized fares)
     # The pricing strategies define the business rules (per-minute rate, etc.),
     # and calculate_fares applies those rates to all trips at once via NumPy.
-    #
-    # from pricing import CasualPricing, MemberPricing
-    # from numerical import calculate_fares
-    # import numpy as np
-    #
-    # casual_strategy = CasualPricing()
-    # member_strategy = MemberPricing()
-    #
-    # # Example: compute a single trip cost using the strategy directly
-    # single_cost = casual_strategy.calculate_cost(duration_minutes=20, distance_km=5)
-    #
-    # # Bulk: use the strategy's rates with NumPy for all casual trips at once
-    # casual_mask = system.trips["user_type"] == "casual"
-    # casual_trips = system.trips[casual_mask]
-    # casual_fares = calculate_fares(
-    #     durations=casual_trips["duration_minutes"].to_numpy(),
-    #     distances=casual_trips["distance_km"].to_numpy(),
-    #     per_minute=casual_strategy.PER_MINUTE,
-    #     per_km=casual_strategy.PER_KM,
-    #     unlock_fee=casual_strategy.UNLOCK_FEE,
-    # )
-    # print(f"  Casual revenue   : €{np.sum(casual_fares):.2f}")
+    
+    # Step 4b — Pricing (Strategy Pattern + NumPy vectorized fares)
+    print("\n>>> Computing fares …")
+    system.compute_fares()
+
+    top5 = system.top_fares(n=5)
+    print("\nTop 5 fares:")
+    print(top5.to_string(index=False))
+
+    avg_fares = system.avg_fare_by_user_type()
+    print("\nAverage fare per user type:")
+    print(avg_fares.to_string(index=False, header=False))
+
 
     # Step 5 — Visualizations
     print("\n>>> Generating visualizations …")

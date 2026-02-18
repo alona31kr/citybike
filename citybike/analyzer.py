@@ -12,10 +12,12 @@ Students should implement the cleaning logic and at least 10 analytics methods.
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from pricing import CasualPricing, MemberPricing, PeakHourPricing
 
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
+PEAK_HOURS = [(7, 9), (17, 19)]
 
 
 class BikeShareSystem:
@@ -212,6 +214,69 @@ class BikeShareSystem:
             .sort_values('total_usage_min', ascending=False)
         )
 
+    def is_peak_hour(self, hour: int) -> bool:
+        return any(start <= hour <= end for start, end in self.PEAK_HOURS)
+
+    def compute_fares(self):
+
+        trips = self.trips
+
+        durations = trips["duration_minutes"].to_numpy()
+        distances = trips["distance_km"].to_numpy()
+        user_types = trips["user_type"].to_numpy()
+        hours = trips["start_time"].dt.hour.to_numpy()
+
+        fares = np.zeros(len(trips))
+
+        # Casual pricing
+        casual = CasualPricing()
+        casual_mask = user_types == "casual"
+
+        fares[casual_mask] = (
+            casual.UNLOCK_FEE
+            + casual.PER_MINUTE * durations[casual_mask]
+            + casual.PER_KM * distances[casual_mask]
+        )
+
+        # Member pricing
+        member = MemberPricing()
+        member_mask = user_types == "member"
+
+        fares[member_mask] = (
+            member.PER_MINUTE * durations[member_mask]
+            + member.PER_KM * distances[member_mask]
+        )
+
+        # Peak-hour surcharge
+        peak_mask = np.zeros(len(trips), dtype=bool)
+
+        for start, end in PEAK_HOURS:
+            peak_mask |= (start <= hours) & (hours <= end)
+
+        fares[peak_mask] *= PeakHourPricing.MULTIPLIER
+        self.trips["fare"] = np.round(fares, 2)
+
+
+    def top_fares(self, n: int = 5) -> pd.DataFrame:
+        """Return top n trips by fare including user name and route"""
+        df = self.trips.copy()
+        df["route"] = df["start_station"] + " → " + df["end_station"]
+
+        return df[["trip_id", "user_name", "route", "fare"]].sort_values(
+            "fare", ascending=False
+        ).head(n)
+
+    def top_fares(self, n: int = 5) -> pd.DataFrame:
+        """Return top n trips by fare."""
+        return self.trips[["trip_id", "user_id", "fare"]].sort_values(
+            "fare", ascending=False
+        ).head(n)
+
+    def avg_fare_by_user_type(self) -> pd.DataFrame:
+        """Return average fare per user type."""
+        return self.trips.groupby("user_type", as_index=False)["fare"].mean().round(2)
+
+
     # ------------------------------------------------------------------
     # Reporting
     # ------------------------------------------------------------------
@@ -272,12 +337,34 @@ class BikeShareSystem:
         # --- Q9: Maintenance cost by bike type ---
         maint_cost = self.maintenance_cost_by_bike_type()
         lines.append("\n--- Maintenance Cost by Bike Type ---")
-        lines.append(maint_cost.to_string())
+        lines.append(maint_cost.to_string(index=False))
 
         # --- Q10: Most common start→end station pairs ---
         top_routes = self.top_routes()
         lines.append("\n--- Top 10 Routes ---")
         lines.append(top_routes.to_string(index=False))
+
+
+        # --- Fares Summary (NEW) ---
+        lines.append("\n--- Fares Summary ---")
+        if "fare" in self.trips.columns:
+            total_revenue = self.trips["fare"].sum()
+            lines.append(f"  Total revenue: €{total_revenue:.2f}")
+
+            avg_fares = self.avg_fare_by_user_type()
+            lines.append("\n  Average fare per user type:")
+            lines.append(avg_fares.to_string(index=False))
+
+            top5_fares = self.top_fares(n=5)
+            lines.append("\n  Top 5 fares:")
+            lines.append(top5_fares.to_string(index=False))
+
+        else:
+            lines.append("  Fares not computed yet. Run compute_fares() first.")
+
+
+
+
 
         report_text = "\n".join(lines) + "\n"
         report_path.write_text(report_text)
