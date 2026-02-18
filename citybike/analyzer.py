@@ -5,20 +5,18 @@ Contains the BikeShareSystem class that orchestrates:
     - CSV loading and cleaning
     - Answering business questions using Pandas
     - Generating summary reports
-
-Students should implement the cleaning logic and at least 10 analytics methods.
 """
 
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from pricing import CasualPricing, MemberPricing, PeakHourPricing
+from numerical import calculate_fares  
 
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 PEAK_HOURS = [(7, 9), (17, 19)]
-
 
 class BikeShareSystem:
     """Central analysis class — loads, cleans, and analyzes bike-share data.
@@ -218,7 +216,7 @@ class BikeShareSystem:
         return any(start <= hour <= end for start, end in self.PEAK_HOURS)
 
     def compute_fares(self):
-
+        """Compute fares for all trips using vectorized NumPy and the pricing strategy classes."""
         trips = self.trips
 
         durations = trips["duration_minutes"].to_numpy()
@@ -228,43 +226,37 @@ class BikeShareSystem:
 
         fares = np.zeros(len(trips))
 
-        # Casual pricing
-        casual = CasualPricing()
+        # --- Casual pricing ---
         casual_mask = user_types == "casual"
-
-        fares[casual_mask] = (
-            casual.UNLOCK_FEE
-            + casual.PER_MINUTE * durations[casual_mask]
-            + casual.PER_KM * distances[casual_mask]
+        casual = CasualPricing()
+        fares[casual_mask] = calculate_fares(
+            durations=durations[casual_mask],
+            distances=distances[casual_mask],
+            per_minute=casual.PER_MINUTE,
+            per_km=casual.PER_KM,
+            unlock_fee=casual.UNLOCK_FEE,
         )
 
-        # Member pricing
-        member = MemberPricing()
+        # --- Member pricing ---
         member_mask = user_types == "member"
-
-        fares[member_mask] = (
-            member.PER_MINUTE * durations[member_mask]
-            + member.PER_KM * distances[member_mask]
+        member = MemberPricing()
+        fares[member_mask] = calculate_fares(
+            durations=durations[member_mask],
+            distances=distances[member_mask],
+            per_minute=member.PER_MINUTE,
+            per_km=member.PER_KM,
+            unlock_fee=0.0,
         )
 
-        # Peak-hour surcharge
+        # --- Peak-hour surcharge ---
         peak_mask = np.zeros(len(trips), dtype=bool)
-
         for start, end in PEAK_HOURS:
             peak_mask |= (start <= hours) & (hours <= end)
-
         fares[peak_mask] *= PeakHourPricing.MULTIPLIER
+
+        # --- Save fares ---
         self.trips["fare"] = np.round(fares, 2)
 
-
-    def top_fares(self, n: int = 5) -> pd.DataFrame:
-        """Return top n trips by fare including user name and route"""
-        df = self.trips.copy()
-        df["route"] = df["start_station"] + " → " + df["end_station"]
-
-        return df[["trip_id", "user_name", "route", "fare"]].sort_values(
-            "fare", ascending=False
-        ).head(n)
 
     def top_fares(self, n: int = 5) -> pd.DataFrame:
         """Return top n trips by fare."""
@@ -358,13 +350,8 @@ class BikeShareSystem:
             top5_fares = self.top_fares(n=5)
             lines.append("\n  Top 5 fares:")
             lines.append(top5_fares.to_string(index=False))
-
         else:
             lines.append("  Fares not computed yet. Run compute_fares() first.")
-
-
-
-
 
         report_text = "\n".join(lines) + "\n"
         report_path.write_text(report_text)
